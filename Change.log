@@ -1,0 +1,6 @@
+ Mon Mar 28 21:36:12 CDT 2016
+ ssr team commit 693e459fabebb88cd9663b5f05a2f366621d79ae
+Merge pull request #445 from jeffersoncarpenter/master
+Fix compile error in AVWrapper, in code path for 
+old ffmpeg/libav versions (m_packet is now a pointer).
+
