@@ -25,3 +25,6 @@ this program is actually quite complex. It's 'simple' in the sense
  
  
  This requires:ffmpeg 
+ 
+If upgrading from "0.3.6 build 3" to  "0.3.6 Build 4 and above"
+you will have to do a "removepkg ssr" then install the latest build

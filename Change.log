@@ -4,3 +4,15 @@ Merge pull request #445 from jeffersoncarpenter/master
 Fix compile error in AVWrapper, in code path for 
 old ffmpeg/libav versions (m_packet is now a pointer).
 
+
+Wed Jun  8 08:11:05 CDT 2016
+merge with https://github.com/MaartenBaert/ssr
+Make GLInject between different users (relaxed permissions) actually work
+commit 3ca84d749a934a6b2983625e8ba023398aeeed43
+
+edited configure to use revision from git.use my git repo
+https://github.com/Drakeo/ssr.git
+commit 13ba4e155ffe8506bb8222f1e973159069b65a49 
+
+If upgrading from "0.3.6 build 3" to  "0.3.6 Build 4 and above"
+you will have to do a "removepkg ssr" then install the latest build

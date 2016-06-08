@@ -24,7 +24,7 @@
 
 PRGNAM=ssr
 VERSION=${VERSION:-0.3.6}
-BUILD=${BUILD:-3}
+BUILD=${BUILD:-4}
 TAG=${TAG:-_SBo}
 NPROC=$(nproc)
 SRCNAM=ssr
@@ -69,10 +69,18 @@ fi
 set -e
 
 # uncomment below this line if you want to test the latest build commits.
-#wget https://github.com/MaartenBaert/ssr/archive/master.zip
-#unzip master.zip
-#mv ssr-master $SRCNAM-$VERSION
-#tar cvf $SRCNAM-$VERSION.tar.gz  $SRCNAM-$VERSION
+#rm $PRGNAM-$VERSION.tar.gz
+#if [ -d $CWD/$PRGNAM ]
+#then
+#cd $CWD/$PRGNAM
+#  git pull
+#else
+#  git clone  https://github.com/Drakeo/ssr.git
+#fi
+#cd $CWD
+#cp -rf ssr $PRGNAM-$VERSION
+#tar cvf $PRGNAM-$VERSION.tar.gz  $PRGNAM-$VERSION
+#rm -rf $PRGNAM-$VERSION
 
 rm -rf $PKG
 mkdir -p $TMP $PKG $OUTPUT
@@ -164,7 +172,8 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 cat $CWD/doinst.sh > $PKG/install/doinst.sh
 
+# Get the version
+REV=$(cat /tmp/SBo/ssr-0.3.6/build/config.h | head -n 59 | tail -1 | cut -c33-35)
+
 cd $PKG
-/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz} 
-
-
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$REV-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz}  
