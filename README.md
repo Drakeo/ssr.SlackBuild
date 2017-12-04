@@ -3,28 +3,18 @@ SimpleScreenRecorder is a Linux program that I've created to record programs and
 SimpleScreenRecorder is a screen recorder for Linux. Despite the name, 
 this program is actually quite complex. It's 'simple' in the sense
  that it's easier to use than ffmpeg/avconv or VLC :).
- 
+ ~~~
+ this will grab the latest master from https://github.com/MaartenBaert/ssr
+ ~~~
  This will also build your multi-lib for x86_64 with Alien Bobs multi-lib installed
- 
- NO you do not need ffmpeg-compat32 installed this allows you to capture 32 bit gaming like Steam audio
- 
- Pulseaudio and Jack are enabled by default to build with out one or the other
- 
- You can pass these options.
- 
- PULSE=no ./ssr.SlackBuild
- 
- JACK=no  ./ssr.SlackBuild
- 
- Or for both.
- 
- PULSE=no JACK=no ./ssr.SlackBuild
- 
- 
+ Whe build 32bit first on multilib.
+ This is done to have final links to 64 bit.
+ this requires 32bit ffmpeg and make sure you have 32bit dependencies
+ when 32bit fails it will show the missing libraries. 
+ ~~~
  Optional dependency:libav (libavformat, libavcodec, libavutil, libswscale)
- 
+ ~~~
  
  This requires:ffmpeg 
- 
-If upgrading from "0.3.6 build 3" to  "0.3.6 Build 4 and above"
-you will have to do a "removepkg ssr" then install the latest build
+# For qt4 and qt5
+

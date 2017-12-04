@@ -1,3 +1,11 @@
+Sun Dec  3 23:00:20 CST 2017
+merge qt4 and qt5
+build 32bit first onmulti lib
+make script conform to SSR new cmake build
+pull from https://github.com/MaartenBaert/ssr
+use his github
+create new version control in script.
+
  Mon Mar 28 21:36:12 CDT 2016
  ssr team commit 693e459fabebb88cd9663b5f05a2f366621d79ae
 Merge pull request #445 from jeffersoncarpenter/master
@@ -14,5 +22,12 @@ edited configure to use revision from git.use my git repo
 https://github.com/Drakeo/ssr.git
 commit 13ba4e155ffe8506bb8222f1e973159069b65a49 
 
-If upgrading from "0.3.6 build 3" to  "0.3.6 Build 4 and above"
-you will have to do a "removepkg ssr" then install the latest build
+edited configure to use revision from git.use my git repo
+https://github.com/Drakeo/ssr.git
+commit c20e56a8eabb2677b0c538d0d056ff48d4cfc971
+tag 0.3.8
+
+If upgrading from "0.3.6 build 4" to  "0.3.8 Build 1 and above"
+
+build for gcc 7.1 slackware 14.2 and current with alien Bob's  Ktown
+

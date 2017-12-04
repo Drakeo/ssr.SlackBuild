@@ -23,8 +23,8 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PRGNAM=ssr
-VERSION=${VERSION:-0.3.6}
-BUILD=${BUILD:-4}
+VERSION=${VERSION:-0.3.8}
+BUILD=${BUILD:-7}
 TAG=${TAG:-_SBo}
 NPROC=$(nproc)
 SRCNAM=ssr
@@ -41,46 +41,43 @@ CWD=$(pwd)
 TMP=${TMP:-/tmp/SBo}
 PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
+BRANCH=master
+if [ -d $CWD/$PRGNAM ]
+then
+cd $CWD/$PRGNAM
+  git pull
+else
+  git clone https://github.com/MaartenBaert/ssr.git
+fi
+cd $CWD/$PRGNAM
+git checkout  $BRANCH
+
+cd $CWD
+cp -rf $PRGNAM $PRGNAM-$VERSION
+tar cvf  $PRGNAM-$VERSION.tar.gz $PRGNAM-$VERSION/
+sleep 3
+rm -rf $PRGNAM-$VERSION
+
+
 
 if [ "$ARCH" = "i586" ]; then
   SLKCFLAGS="-O2 -march=i586 -mtune=i686"
   LIBDIRSUFFIX=""
+  LIBD="32"
 elif [ "$ARCH" = "i686" ]; then
   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
   LIBDIRSUFFIX=""
+  LIBD="32"
 elif [ "$ARCH" = "x86_64" ]; then
   SLKCFLAGS="-O2 -fPIC"
   LIBDIRSUFFIX="64"
+  LIBD="64"
 else
   SLKCFLAGS="-O2"
   LIBDIRSUFFIX=""
 fi
 
-if [ "${JACK:-yes}" = "yes" ]; then
- jack="" 
-else jack="--without-jack"
-fi
-if [ "${PULSE:-yes}" = "yes" ]; then 
-pulse="" 
-else
-pulse="--without-pulseaudio"
-fi
-
 set -e
-
-# uncomment below this line if you want to test the latest build commits.
-#rm $PRGNAM-$VERSION.tar.gz
-#if [ -d $CWD/$PRGNAM ]
-#then
-#cd $CWD/$PRGNAM
-#  git pull
-#else
-#  git clone  https://github.com/Drakeo/ssr.git
-#fi
-#cd $CWD
-#cp -rf ssr $PRGNAM-$VERSION
-#tar cvf $PRGNAM-$VERSION.tar.gz  $PRGNAM-$VERSION
-#rm -rf $PRGNAM-$VERSION
 
 rm -rf $PKG
 mkdir -p $TMP $PKG $OUTPUT
@@ -94,68 +91,106 @@ find -L . \
   -o -perm 511 \) -exec chmod 755 {} \; -o \
  \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+ 
+ rm $CWD/$PRGNAM-$VERSION.tar.gz
+  
+  if [ -d  /usr/lib64/pulseaudio ]; then
+     pulse64=""
+ else pulse64="-DWITH_PULSEAUDIO=FALSE"   
+ fi
+ if [ -d  /usr/lib64/jack ]; then
+     jack64=""
+ else jack64="-DWITH_JACK=FALSE"  
+ fi
 
- if [ -f  /etc/profile.d/32dev.sh ]; then
+  if [ -d  /usr/lib/pulseaudio ]; then
+     pulse32=""
+ else pulse32="-DWITH_PULSEAUDIO=FALSE"   
+ fi
+ if [ -d  /usr/lib/jack ]; then
+     jack32=""
+ else jack32="-DWITH_JACK=FALSE"  
+ fi
+  if [ -f  /etc/profile.d/32dev.sh ]; then
      MLIB=""
-     echo -e "\e[1;33m building for multi-lib paused 10 seconds to read this\e[0m"
+     echo -e "\e[1;32m building for multi-lib paused 10 seconds to read this\e[0m"
      echo -e "\e[1;33m If you do not want 32 bit compatable rename /etc/profile.d/32dev.sh  /etc/profile.d/32dev.sh-bkup and build \e[0m"
-     echo -e "\e[1;33m or press ctrl c and exit \e[0m"     
-     sleep 10  
-
+     echo -e "\e[1;33m or press ctrl c and exit \e[0m"
+     echo -e "\e[1;34m OK need to build 32 bit first \e[0m"      
+     sleep 10
+     
+ . /etc/profile.d/32dev.sh
 mkdir -p build
 cd build
-CFLAGS="$SLKCFLAGS" \
-../configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --sysconfdir=/etc \
-  --localstatedir=/var \
-  --build=$ARCH-slackware-linux \
-  $jack \
-  $pulse
-
+CFLAGS="-m32 -O2 -march=i686 -mtune=i686"
+cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" $jack32 $pulse32 -DCMAKE_BUILD_TYPE=Release ..
 make -j$NPROC
-make install DESTDIR=$PKG
+make install
 
-. /etc/profile.d/32dev.sh
-
+echo -e "\e[1;34m OK! prepare 64bit now\e[0m" 
+sleep 2
 cd $TMP/$SRCNAM-$VERSION
-CONFIGURE_OPTIONS="--disable-assert $ENABLE_X86_ASM $ENABLE_FFMPEG_VERSIONS"
-mkdir -p build32
-cd build32
-CFLAGS="$SLKCFLAGS" \
-../configure \
-  --disable-ssrprogram $CONFIGURE_OPTIONS \
-  --prefix=/usr \
-  --libdir=/usr/lib${MLIB} \
-  --sysconfdir=/etc \
-  --localstatedir=/var \
-  --build=$ARCH-slackware-linux \
-  $jack \
-  $pulse
+cat > 64dev.sh <<EOF
+#!/bin/sh
+# $Id: 32dev.sh,v 1.4 2014/10/02 09:31:37 eha Exp eha $
+# Copyright (C) 2007  Frederick Emmott <mail@fredemmott.co.uk>
+# Copyright 2009  Eric Hameleers, Eindhoven, NL
+# Based on the file with the same name which is part of
+# the Slamd64 Linux project (www.slamd64.com)
 
-make -j$NPROC
-make install DESTDIR=$PKG
+# Distributed under the GNU General Public License, version 2, as
+# published by the Free Software Foundation.
 
-else 
+# Modify the compilation/linking environment:
+export PATH="/usr/bin/:/usr/lib64/qt/bin:$PATH"
+export CC="gcc" # This is actually the /usr/bin/32/gcc wrapper
+export CXX="g++"
+export FC="gfortran" # This is actually the /usr/bin/gfortran wrapper
+export F77="gfortran"
 
-mkdir -p build
-cd build
+# Change the shell prompt to make it clear that we are in 64bit mode:
+PS1='\u@\h (64bit):\w\$ '
 
-CFLAGS="$SLKCFLAGS" \
-../configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --sysconfdir=/etc \
-  --localstatedir=/var \
-  --build=$ARCH-slackware-linux \
-  $jack \
-  $pulse
-
-make -j$NPROC
-make install DESTDIR=$PKG
+# Check for Qt5, Qt4 and the old 'compatibility install' of Qt3:
+if [ -d /opt/kde3/lib64/qt3 ]; then
+  export QTDIR=/opt/kde3/lib64/qt3
+fi
+if [ -d /usr/lib64/qt ]; then
+  export QT4DIR=/usr/lib64/qt
+fi
+if [ -d /usr/lib64/qt5 ]; then
+  export QT5DIR=/usr/lib64/qt5
 fi
 
+if [ ! "$LD_LIBRARY_PATH" = "" ]; then
+  export LD_LIBRARY_PATH="/usr/local/lib64:/lib64:/usr/lib64:$LD_LIBRARY_PATH"
+else
+  export LD_LIBRARY_PATH="/usr/local/lib64:/lib64:/usr/lib64"
+fi
+
+if [ ! "$PKG_CONFIG_PATH" = "" ]; then
+  export PKG_CONFIG_PATH="/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig:$PKG_CONFIG_PATH"
+else
+  export PKG_CONFIG_PATH="/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig"
+fi
+EOF
+. $TMP/$SRCNAM-$VERSION/64dev.sh
+mkdir -p build64
+cd build64
+CFLAGS="-m64 -O2 -fPIC"
+cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" $jack64 $pulse64 -DCMAKE_BUILD_TYPE=Release ..
+make -j$NPROC
+make install
+
+else
+echo -e "\e[1;34m OK building the $ARCH \e[0m" 
+mkdir -p build
+cd build
+CFLAGS="$SLKCFLAGS"
+cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" $jack$LIBD $pulse$LIBD -DCMAKE_BUILD_TYPE=Release ..
+make -j$NPROC
+make install
+fi
 
 find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
   | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
@@ -172,8 +207,8 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 cat $CWD/doinst.sh > $PKG/install/doinst.sh
 
-# Get the version
-REV=$(cat /tmp/SBo/ssr-0.3.6/build/config.h | head -n 59 | tail -1 | cut -c33-35)
+ # Get the version
+REV=$(cat $TMP/$SRCNAM-$VERSION/.git/refs/heads/master | head -n 59 | tail -1 | cut -c1-10)
 
 cd $PKG
-/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$REV-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz}  
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$REV-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz} 
