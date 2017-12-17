@@ -132,7 +132,7 @@ sleep 2
 cd $TMP/$SRCNAM-$VERSION
 cat > 64dev.sh <<EOF
 #!/bin/sh
-# $Id: 32dev.sh,v 1.4 2014/10/02 09:31:37 eha Exp eha $
+# $Id: switch back to 64dev.sh,v 1.4 2014/10/02 09:31:37 eha Exp eha $
 # Copyright (C) 2007  Frederick Emmott <mail@fredemmott.co.uk>
 # Copyright 2009  Eric Hameleers, Eindhoven, NL
 # Based on the file with the same name which is part of
@@ -143,7 +143,7 @@ cat > 64dev.sh <<EOF
 
 # Modify the compilation/linking environment:
 export PATH="/usr/bin/:/usr/lib64/qt/bin:$PATH"
-export CC="gcc" # This is actually the /usr/bin/32/gcc wrapper
+export CC="gcc" # This is actually the /usr/bin/gcc wrapper
 export CXX="g++"
 export FC="gfortran" # This is actually the /usr/bin/gfortran wrapper
 export F77="gfortran"
