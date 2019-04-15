@@ -23,8 +23,8 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PRGNAM=ssr
-VERSION=${VERSION:-0.3.10}
-BUILD=${BUILD:-7}
+VERSION=${VERSION:-0.3.11}
+BUILD=${BUILD:-1}
 TAG=${TAG:-_SBo}
 NPROC=$(nproc)
 SRCNAM=ssr
@@ -41,7 +41,7 @@ CWD=$(pwd)
 TMP=${TMP:-/tmp/SBo}
 PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
-BRANCH=master
+BRANCH="0.3.11"
 if [ -d $CWD/$PRGNAM ]
 then
 cd $CWD/$PRGNAM
