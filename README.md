@@ -4,7 +4,7 @@ SimpleScreenRecorder is a screen recorder for Linux. Despite the name,
 this program is actually quite complex. It's 'simple' in the sense
  that it's easier to use than ffmpeg/avconv or VLC :).
  ~~~
- this will grab the latest master from https://github.com/MaartenBaert/ssr
+ this will grab the latest stable release  from https://github.com/MaartenBaert/ssr
  edit  slack build branch to master if you want the latest devlopment code. 
  ~~~
  This will also build your multi-lib for x86_64 with Alien Bobs multi-lib installed
