@@ -57,7 +57,7 @@ cp -rf $PRGNAM $PRGNAM-$VERSION
 tar cvf  $PRGNAM-$VERSION.tar.gz $PRGNAM-$VERSION/
 sleep 3
 rm -rf $PRGNAM-$VERSION
-
+rm -rf ssr
 
 
 if [ "$ARCH" = "i586" ]; then
@@ -118,12 +118,30 @@ find -L . \
      echo -e "\e[1;33m or press ctrl c and exit \e[0m"
      echo -e "\e[1;34m OK need to build 32 bit first \e[0m"      
      sleep 10
+if [ -z "$WITH_QT5" ]; then
+	echo "Detecting Qt version ..."
+	if pkg-config --exists "Qt5Gui >= 5.7"; then
+		echo "  Detected Qt5 (version $( pkg-config --modversion Qt5Gui ))."
+		WITH_QT5="TRUE"
+	elif pkg-config --exists "QtGui >= 4.8"; then
+		echo "  Detected Qt4 (version $( pkg-config --modversion QtGui ))."
+		WITH_QT5="FALSE"
+	else
+		echo "  Error: Qt development package not found, make sure that either Qt4 (4.8 or newer) or Qt5 (5.7 or newer) is installed."
+		exit 1
+	fi
+fi
+
      
  . /etc/profile.d/32dev.sh
 mkdir -p build
 cd build
 CFLAGS="-m32 -O2 -march=i686 -mtune=i686"
-cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" $jack32 $pulse32 -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" \
+$jack32 \
+$pulse32 \
+-DWITH_QT5=$WITH_QT5 \
+-DCMAKE_BUILD_TYPE=Release ..
 make -j$NPROC
 make install
 
@@ -178,7 +196,11 @@ EOF
 mkdir -p build64
 cd build64
 CFLAGS="-m64 -O2 -fPIC"
-cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" $jack64 $pulse64 -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" \
+$jack64 \
+$pulse64 \
+-DWITH_QT5=$WITH_QT5 \
+-DCMAKE_BUILD_TYPE=Release ..
 make -j$NPROC
 make install
 
@@ -187,7 +209,11 @@ echo -e "\e[1;34m OK building the $ARCH \e[0m"
 mkdir -p build
 cd build
 CFLAGS="$SLKCFLAGS"
-cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" $jack$LIBD $pulse$LIBD -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" \
+$jack$LIBD \
+$pulse$LIBD \
+-DWITH_QT5=$WITH_QT5 \
+-DCMAKE_BUILD_TYPE=Release ..
 make -j$NPROC
 make install
 fi
