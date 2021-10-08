@@ -23,11 +23,10 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PRGNAM=ssr
-VERSION=${VERSION:-0.3.11}
-BUILD=${BUILD:-2}
-TAG=${TAG:-_SBo}
+VERSION=${VERSION:-0.4.3}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_drakeo}
 NPROC=$(nproc)
-SRCNAM=ssr
 
 if [ -z "$ARCH" ]; then
     case "$( uname -m )" in
@@ -38,26 +37,21 @@ if [ -z "$ARCH" ]; then
 fi
 
 CWD=$(pwd)
-TMP=${TMP:-/tmp/SBo}
+TMP=${TMP:-/tmp/studio}
 PKG=$TMP/package-$PRGNAM
-OUTPUT=${OUTPUT:-/tmp}
-BRANCH="0.3.11"
-if [ -d $CWD/$PRGNAM ]
-then
-cd $CWD/$PRGNAM
-  git pull
+OUTPUT=${OUTPUT:-/tmp/studio/pkgs}
+
+if [ -f $CWD/$PRGNAM-$VERSION.tar.gz ]; then
+echo already built tarball
 else
   git clone https://github.com/MaartenBaert/ssr.git
+  cd $CWD/$PRGNAM
+  git checkout  $VERSION
+  cd $CWD
+  mv  $PRGNAM $PRGNAM-$VERSION
+  tar cvf  $PRGNAM-$VERSION.tar.gz $PRGNAM-$VERSION/
+  rm -rf  $PRGNAM-$VERSION
 fi
-cd $CWD/$PRGNAM
-git checkout  $BRANCH
-
-cd $CWD
-cp -rf $PRGNAM $PRGNAM-$VERSION
-tar cvf  $PRGNAM-$VERSION.tar.gz $PRGNAM-$VERSION/
-sleep 3
-rm -rf $PRGNAM-$VERSION
-rm -rf ssr
 
 
 if [ "$ARCH" = "i586" ]; then
@@ -81,10 +75,10 @@ set -e
 
 rm -rf $PKG
 mkdir -p $TMP $PKG $OUTPUT
-rm -rf $TMP/$SRCNAM-$VERSION
+rm -rf $TMP/$PRGNAM-$VERSION
 cd $TMP
-tar xvf $CWD/$SRCNAM-$VERSION.tar.?z*
-cd $SRCNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.?z*
+cd $PRGNAM-$VERSION
 chown -R root:root .
 find -L . \
  \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
@@ -138,17 +132,25 @@ if [ -f  /etc/profile.d/32dev.sh ]; then
 mkdir -p build
 cd build
 CFLAGS="-m32 -O2 -march=i686 -mtune=i686"
-cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" \
+cmake \
+-DCMAKE_C_FLAGS="$SLKCFLAGS" \
+-DCMAKE_CXX_FLAGS="$SLKCFLAGS" \
+-DCMAKE_INSTALL_PREFIX="$PKG/usr" \
+-DCMAKE_INSTALL_PREFIX=/usr \
+-DLIB_SUFFIX="$LIBD" \
 $jack32 \
 $pulse32 \
 -DWITH_QT5=$WITH_QT5 \
--DCMAKE_BUILD_TYPE=Release ..
-make -j$NPROC
-make install
+-DDOC_INSTALL_DIR="doc" \
+-DCMAKE_INSTALL_MANDIR=/usr/man \
+  .. || exit 1
+  make $NUMJOBS || make || exit 1
+  make install DESTDIR=$PKG || exit 1
+cd ..
 
 echo -e "\e[1;34m OK! prepare 64bit now\e[0m" 
 sleep 2
-cd $TMP/$SRCNAM-$VERSION
+cd $TMP/$PRGNAM-$VERSION
 cat > 64dev.sh <<EOF
 #!/bin/sh
 # $Id: switch back to 64dev.sh,v 1.4 2014/10/02 09:31:37 eha Exp eha $
@@ -193,7 +195,7 @@ else
   export PKG_CONFIG_PATH="/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig"
 fi
 EOF
-. $TMP/$SRCNAM-$VERSION/64dev.sh
+. $TMP/$PRGNAM-$VERSION/64dev.sh
 mkdir -p build64
 cd build64
 CFLAGS="-m64 -O2 -fPIC"
@@ -201,9 +203,12 @@ cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" \
 $jack64 \
 $pulse64 \
 -DWITH_QT5=$WITH_QT5 \
--DCMAKE_BUILD_TYPE=Release ..
-make -j$NPROC
-make install
+-DDOC_INSTALL_DIR="doc" \
+-DCMAKE_INSTALL_MANDIR=/usr/man \
+ .. || exit 1
+  make $NUMJOBS || make || exit 1
+  make install DESTDIR=$PKG || exit 1
+cd ..
 
 else
 echo -e "\e[1;34m OK building the $ARCH \e[0m" 
@@ -214,28 +219,32 @@ cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr" \
 $jack$LIBD \
 $pulse$LIBD \
 -DWITH_QT5=$WITH_QT5 \
--DCMAKE_BUILD_TYPE=Release ..
-make -j$NPROC
-make install
+-DDOC_INSTALL_DIR="doc" \
+-DCMAKE_INSTALL_MANDIR=/usr/man \
+ .. || exit 1
+  make $NUMJOBS || make || exit 1
+  make install DESTDIR=$PKG || exit 1
+cd ..
 fi
 
-find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
-  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
-  
-cd $TMP/$SRCNAM-$VERSION
+# Strip binaries:
+find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
-mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
-cp -a notes.txt todo.txt CHANGELOG.md COPYING  README.md  \
-    $PKG/usr/doc/$PRGNAM-$VERSION
-find $PKG/usr/doc/$PRGNAM-$VERSION -type f -exec chmod 644 {} \;
-cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+# Compress manual pages:
+find $PKG/usr/man -type f -exec gzip -9 {} \+
+for i in $( find $PKG/usr/man -type l ) ; do
+  ln -s $( readlink $i ).gz $i.gz
+  rm $i
+done
 
-mkdir -p $PKG/install
-cat $CWD/slack-desc > $PKG/install/slack-desc
-cat $CWD/doinst.sh > $PKG/install/doinst.sh
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/${PRGNAM}-$VERSION
+cp -a \
+  AUTHORS* CHANGELOG* COPYING* README* \
+  $PKG/usr/doc/${PRGNAM}-$VERSION
 
  # Get the version
-REV=$(cat $TMP/$SRCNAM-$VERSION/.git/refs/heads/master | head -n 59 | tail -1 | cut -c1-10)
+REV=$(cat $TMP/$PRGNAM-$VERSION/.git/refs/heads/master | head -n 59 | tail -1 | cut -c1-10)
 
 cd $PKG
-/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$REV-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz} 
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz} 
